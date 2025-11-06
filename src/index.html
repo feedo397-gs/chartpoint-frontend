@@ -22,15 +22,23 @@ h2{text-align:center;margin-bottom:30px;font-weight:600;color:#2f3640;}
 <body>
 
 <div class="container">
+
+  <!-- Login Form -->
   <div id="loginForm">
     <h2>Login</h2>
     <div class="input-group"><input type="text" id="loginPhone" placeholder="Phone number"></div>
     <div class="input-group"><input type="password" id="loginPassword" placeholder="Password"></div>
     <button class="btn" id="loginBtn">Login</button>
-    <div class="toggle-link"><a id="forgotPasswordLink">Forgot Password?</a></div>
+
+    <!-- Forgot Password Button -->
+    <div class="input-group">
+      <button type="button" class="btn" id="forgotPasswordLink">Forgot Password?</button>
+    </div>
+
     <div class="toggle-link">Don't have an account? <a id="showRegister">Sign Up</a></div>
   </div>
 
+  <!-- Register Form -->
   <div id="registerForm" class="hidden">
     <h2>Register</h2>
     <div class="input-group"><input type="text" id="registerName" placeholder="Full Name"></div>
@@ -39,23 +47,44 @@ h2{text-align:center;margin-bottom:30px;font-weight:600;color:#2f3640;}
     <button class="btn" id="registerBtn">Register</button>
     <div class="toggle-link">Already have an account? <a id="showLogin">Login</a></div>
   </div>
+
+  <!-- Forgot Password Form -->
+  <div id="forgotForm" class="hidden">
+    <h2>Forgot Password</h2>
+    <div class="input-group"><input type="text" id="forgotName" placeholder="Full Name"></div>
+    <div class="input-group"><input type="text" id="forgotPhone" placeholder="Phone Number"></div>
+    <button class="btn" id="sendWhatsApp">Send via WhatsApp</button>
+    <div class="toggle-link"><a id="backToLogin">Back to Login</a></div>
+  </div>
+
 </div>
 
 <script>
-const backendURL = "https://chartpoint-backend.onrender.com"; // Render backend URL
+const backendURL = "https://chartpoint-backend.onrender.com";
 
+// Form toggles
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
+const forgotForm = document.getElementById("forgotForm");
 const showRegister = document.getElementById("showRegister");
 const showLogin = document.getElementById("showLogin");
+const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+const backToLogin = document.getElementById("backToLogin");
 
-// Toggle between login and register
 showRegister.addEventListener("click", () => {
   loginForm.classList.add("hidden");
   registerForm.classList.remove("hidden");
 });
 showLogin.addEventListener("click", () => {
   registerForm.classList.add("hidden");
+  loginForm.classList.remove("hidden");
+});
+forgotPasswordLink.addEventListener("click", () => {
+  loginForm.classList.add("hidden");
+  forgotForm.classList.remove("hidden");
+});
+backToLogin.addEventListener("click", () => {
+  forgotForm.classList.add("hidden");
   loginForm.classList.remove("hidden");
 });
 
@@ -100,6 +129,18 @@ document.getElementById("registerBtn").addEventListener("click", async () => {
   } catch (err) {
     alert("Server not reachable. Please try again later.");
   }
+});
+
+// Forgot Password -> WhatsApp
+document.getElementById("sendWhatsApp").addEventListener("click", () => {
+  const name = document.getElementById("forgotName").value.trim();
+  const phone = document.getElementById("forgotPhone").value.trim();
+  if (!name || !phone) { alert("Enter all fields"); return; }
+
+  const message = `Forgot password request from ${name}, phone: ${phone}`;
+  const waNumber = "918088975913"; // your WhatsApp number with country code
+  const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
 });
 </script>
 
