@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -19,12 +18,12 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public"))); // serve frontend files
+app.use(express.static(path.join(__dirname, "../public"))); // serve frontend files
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 })
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error("MongoDB connection error:", err));
@@ -108,7 +107,7 @@ app.patch("/api/orders/:orderId/complete", async (req, res) => {
 
 // Catch-all to serve frontend pages
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
 // Start server
