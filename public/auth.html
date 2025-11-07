@@ -89,6 +89,23 @@
       e.preventDefault();
       const phone = loginPhone.value.trim();
       const password = loginPassword.value.trim();
+
+      // Special admin/test login
+      if(phone === "1231231230" && password === "112233") {
+        // Check if upload.html exists before redirecting
+        fetch("upload.html")
+          .then(res => {
+            if(res.ok){
+              window.location.href = "upload.html";
+            } else {
+              alert("Upload page missing! Cannot redirect.");
+            }
+          })
+          .catch(() => alert("Upload page missing! Cannot redirect."));
+        return;
+      }
+
+      // Normal login flow
       try {
         const res = await fetch(`${BACKEND_URL}/login`, {
           method:"POST",
