@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -15,15 +16,22 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ---- CORS setup ----
+// Allow your Vercel frontend domain
+app.use(cors({
+  origin: "https://app-59ed3zxcg-feedo397-gs-projects.vercel.app",
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "../public"))); // serve frontend files
+app.use(express.static(path.join(__dirname, "public"))); // serve frontend files
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error("MongoDB connection error:", err));
@@ -105,9 +113,9 @@ app.patch("/api/orders/:orderId/complete", async (req, res) => {
   }
 });
 
-// Catch-all to serve frontend pages
+// Catch-all to serve frontend pages (optional if serving frontend from backend)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Start server
