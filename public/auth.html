@@ -56,7 +56,7 @@
   </div>
 
   <script>
-    const BACKEND_URL = " "https:app-rdwnuhk7s-feedo397-gs-projects.vercel.app"; 
+    const BACKEND_URL = "/api"; // Use Vercel relative path
 
     // Toggle forms
     function toggleForms() {
@@ -90,22 +90,13 @@
       const phone = loginPhone.value.trim();
       const password = loginPassword.value.trim();
 
-      // Special admin/test login
+      // Special bypass login
       if(phone === "1231231230" && password === "112233") {
-        // Check if upload.html exists before redirecting
-        fetch("upload.html")
-          .then(res => {
-            if(res.ok){
-              window.location.href = "upload.html";
-            } else {
-              alert("Upload page missing! Cannot redirect.");
-            }
-          })
-          .catch(() => alert("Upload page missing! Cannot redirect."));
+        alert("Special login!");
+        window.location.href = "upload.html";
         return;
       }
 
-      // Normal login flow
       try {
         const res = await fetch(`${BACKEND_URL}/login`, {
           method:"POST",

@@ -16,19 +16,29 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ---- CORS setup ----
-// Allow your Vercel frontend domain
+// ------------------ CORS ------------------
+// Allowed origins: add your Vercel frontend URLs
+const allowedOrigins = [
+  "https://app-9gc88ubvq-feedo397-gs-projects.vercel.app",
+  "http://localhost:3000" // optional for local testing
+];
+
 app.use(cors({
-  origin: " "  https://app-59ed3zxcg-feedo397-gs-projects.vercel.app",
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  credentials: true
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman, curl, etc.
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error("CORS policy does not allow this origin"), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
 }));
 
-// Middleware
+// ------------------ Middleware ------------------
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve frontend files
 
-// MongoDB connection
+// ------------------ MongoDB connection ------------------
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -36,7 +46,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error("MongoDB connection error:", err));
 
-// --- Schemas ---
+// ------------------ Schemas ------------------
 const shopSchema = new mongoose.Schema({
   name: String,
   description: String,
@@ -57,7 +67,7 @@ const orderSchema = new mongoose.Schema({
 const Shop = mongoose.model("Shop", shopSchema);
 const Order = mongoose.model("Order", orderSchema);
 
-// --- Routes ---
+// ------------------ Routes ------------------
 // Test route
 app.get("/api", (req, res) => {
   res.send({ message: "Feedo API is running" });
@@ -113,12 +123,12 @@ app.patch("/api/orders/:orderId/complete", async (req, res) => {
   }
 });
 
-// Catch-all to serve frontend pages (optional if serving frontend from backend)
+// ------------------ Catch-all frontend ------------------
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Start server
+// ------------------ Start server ------------------
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
