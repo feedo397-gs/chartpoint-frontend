@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment - Feedo</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top left, #0a0f24, #01040a);
+      color: white;
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .payment-container {
+      background: rgba(15, 20, 40, 0.8);
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(0, 128, 255, 0.5);
+      padding: 30px;
+      width: 350px;
+      text-align: center;
+    }
+
+    h2 {
+      color: #00aaff;
+      margin-bottom: 20px;
+    }
+
+    .order-summary {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    input, select {
+      width: 95%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background-color: #0e1a2b;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0096ff;
+    }
+
+    .back-btn {
+      background-color: transparent;
+      color: #00aaff;
+      border: 1px solid #00aaff;
+      margin-top: 15px;
+    }
+
+    .back-btn:hover {
+      background-color: rgba(0, 170, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-container">
+    <h2>💳 Payment</h2>
+
+    <div class="order-summary" id="orderSummary"></div>
+
+    <select id="paymentOption">
+      <option value="">Select Payment Method</option>
+      <option value="UPI">UPI</option>
+      <option value="Card">Credit/Debit Card</option>
+      <option value="Wallet">Wallet</option>
+    </select>
+
+    <input type="text" id="upiId" placeholder="Enter UPI ID (optional)" style="display:none;" />
+    <button id="payBtn">Proceed to Pay</button>
+    <button class="back-btn" onclick="window.location.href='cart.html'">⬅ Back</button>
+  </div>
+
+  <script>
+    const order = JSON.parse(localStorage.getItem("latestOrder"));
+    const summaryDiv = document.getElementById("orderSummary");
+
+    if (order) {
+      summaryDiv.innerHTML = `
+        <h4>Order Summary</h4>
+        <p><strong>Name:</strong> ${order.name}</p>
+        <p><strong>Total:</strong> ₹${order.total}</p>
+        <p><strong>Address:</strong> ${order.address}, ${order.landmark}</p>
+      `;
+    }
+
+    const paySelect = document.getElementById("paymentOption");
+    const upiInput = document.getElementById("upiId");
+
+    paySelect.addEventListener("change", () => {
+      if (paySelect.value === "UPI") {
+        upiInput.style.display = "block";
+      } else {
+        upiInput.style.display = "none";
+      }
+    });
+
+    document.getElementById("payBtn").addEventListener("click", () => {
+      const mode = paySelect.value;
+      if (!mode) {
+        alert("Please select a payment method!");
+        return;
+      }
+
+      alert("✅ Payment successful via " + mode);
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>

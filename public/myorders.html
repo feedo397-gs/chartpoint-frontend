@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders - Feedo</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(145deg, #0a0f1a, #08101a);
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+  }
+  h2 {
+    text-align: center;
+    color: #00aaff;
+    margin-bottom: 20px;
+  }
+  .section {
+    margin-bottom: 30px;
+  }
+  .order-card {
+    background: rgba(20, 20, 20, 0.9);
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 10px rgba(0, 128, 255, 0.3);
+  }
+  .order-card h3 {
+    margin: 0;
+    color: #00b7ff;
+  }
+  .order-card p {
+    margin: 5px 0;
+    color: #ccc;
+  }
+  .status {
+    font-weight: bold;
+  }
+  .pending {
+    color: #ffcc00;
+  }
+  .completed {
+    color: #00ff99;
+  }
+  .complete-btn {
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #00aaff;
+    color: white;
+    cursor: pointer;
+  }
+  .complete-btn:hover {
+    background-color: #0096ff;
+  }
+  .no-orders {
+    text-align: center;
+    color: #999;
+  }
+  button.back-home {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button.back-home:hover {
+    background-color: #0096ff;
+  }
+</style>
+</head>
+<body>
+<h2>📦 My Orders</h2>
+
+<div class="section">
+  <h3>🕒 Current Orders</h3>
+  <div id="currentOrders" class="orders-list"></div>
+</div>
+
+<div class="section">
+  <h3>✅ Completed Orders</h3>
+  <div id="completedOrders" class="orders-list"></div>
+</div>
+
+<button class="back-home" onclick="window.location.href='index.html'">⬅ Back to Home</button>
+
+<script>
+const BACKEND_URL = "https://feedo-backend.onrender.com"; // deployed backend
+const currentOrdersDiv = document.getElementById("currentOrders");
+const completedOrdersDiv = document.getElementById("completedOrders");
+const customerId = localStorage.getItem("userId"); // logged-in user
+
+if (!customerId) {
+  alert("Please login first!");
+  window.location.href = "auth.html";
+}
+
+// Fetch orders from backend
+async function loadOrders() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orders/user/${customerId}`);
+    const data = await res.json();
+
+    currentOrdersDiv.innerHTML = "";
+    completedOrdersDiv.innerHTML = "";
+
+    // Handle empty
+    if (!data.current?.length) currentOrdersDiv.innerHTML = "<p class='no-orders'>No current orders</p>";
+    if (!data.completed?.length) completedOrdersDiv.innerHTML = "<p class='no-orders'>No completed orders</p>";
+
+    // Render current orders
+    data.current?.forEach(order => {
+      const itemsText = order.items?.map(i => `${i.itemName} x${i.quantity}`).join(", ") || "No items";
+      const shopName = order.shop || order.shopName || "Unknown Shop";
+      const status = order.status || "pending";
+      const date = order.date ? new Date(order.date).toLocaleString() : "Unknown";
+
+      const div = document.createElement("div");
+      div.className = "order-card";
+      div.innerHTML = `
+        <h3>${shopName}</h3>
+        <p><strong>Items:</strong> ${itemsText}</p>
+        <p><strong>Amount:</strong> ₹${order.total || 0}</p>
+        <p><strong>Status:</strong> <span class="status pending">${status}</span></p>
+        <p><strong>Date:</strong> ${date}</p>
+        <button class="complete-btn" onclick="markCompleted('${order._id}')">Mark as Completed</button>
+      `;
+      currentOrdersDiv.appendChild(div);
+    });
+
+    // Render completed orders
+    data.completed?.forEach(order => {
+      const itemsText = order.items?.map(i => `${i.itemName} x${i.quantity}`).join(", ") || "No items";
+      const shopName = order.shop || order.shopName || "Unknown Shop";
+      const status = order.status || "completed";
+      const date = order.date ? new Date(order.date).toLocaleString() : "Unknown";
+
+      const div = document.createElement("div");
+      div.className = "order-card";
+      div.innerHTML = `
+        <h3>${shopName}</h3>
+        <p><strong>Items:</strong> ${itemsText}</p>
+        <p><strong>Amount:</strong> ₹${order.total || 0}</p>
+        <p><strong>Status:</strong> <span class="status completed">${status}</span></p>
+        <p><strong>Date:</strong> ${date}</p>
+      `;
+      completedOrdersDiv.appendChild(div);
+    });
+
+  } catch(err) {
+    console.error(err);
+    currentOrdersDiv.innerHTML = "<p class='no-orders'>Error loading orders</p>";
+    completedOrdersDiv.innerHTML = "<p class='no-orders'>Error loading orders</p>";
+  }
+}
+
+// Mark order as completed
+async function markCompleted(orderId) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orders/${orderId}/complete`, { method: "PATCH" });
+    if(res.ok){
+      alert("Order marked as completed!");
+      loadOrders();
+    } else {
+      const result = await res.json();
+      alert(result.message || "Failed to update order");
+    }
+  } catch(err) {
+    console.error(err);
+    alert("Error updating order status");
+  }
+}
+
+loadOrders();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Dashboard - Feedo</title>
+  <style>
+    body {
+      background-color: #0b0b0b;
+      color: #fff;
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background-color: #111;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 {
+      color: #00aaff;
+      margin: 0;
+    }
+
+    header button {
+      background-color: #00aaff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 15px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    header button:hover {
+      background-color: #0096ff;
+    }
+
+    .order-section {
+      margin: 25px auto;
+      width: 90%;
+      max-width: 450px;
+      background-color: #1a1a1a;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 128, 255, 0.4);
+    }
+
+    .order-section h3 {
+      color: #00aaff;
+    }
+
+    .order-info {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 15px 0;
+      text-align: left;
+    }
+
+    button.action {
+      background-color: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      margin-top: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button.action:hover {
+      background-color: #0080ff;
+    }
+
+    .tab-btns {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+      gap: 10px;
+    }
+
+    .tab-btns button {
+      background-color: #222;
+      border: none;
+      border-radius: 8px;
+      color: #00aaff;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .tab-btns button.active {
+      background-color: #00aaff;
+      color: #fff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .success {
+      color: #00ff99;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Feedo Delivery</h2>
+    <button id="openMap">Open Route</button>
+  </header>
+
+  <div class="tab-btns">
+    <button id="currentOrdersBtn" class="active">Current Orders</button>
+    <button id="prevOrdersBtn">Previous Orders</button>
+  </div>
+
+  <!-- Current Order -->
+  <div id="orderCard" class="order-section">
+    <h3>Current Order</h3>
+    <div class="order-info">
+      <p><b>Shop:</b> Pizza Palace</p>
+      <p><b>Items:</b> Margherita Pizza, Garlic Bread</p>
+      <p><b>Total:</b> ₹450</p>
+      <p><b>Customer:</b> Suraj Hattarakal</p>
+      <p><b>Phone:</b> 8088975913</p>
+      <p><b>Address:</b> 5th Main, MG Road, Near City Mall</p>
+    </div>
+    <button id="completeOrder" class="action">Mark as Completed</button>
+    <p id="saveMsg" class="success"></p>
+  </div>
+
+  <!-- Previous Orders -->
+  <div id="prevOrders" class="order-section hidden">
+    <h3>Previous Orders</h3>
+    <div id="orderHistory"></div>
+  </div>
+
+  <script>
+    const orderCard = document.getElementById("orderCard");
+    const prevOrders = document.getElementById("prevOrders");
+    const currentBtn = document.getElementById("currentOrdersBtn");
+    const prevBtn = document.getElementById("prevOrdersBtn");
+    const orderHistory = document.getElementById("orderHistory");
+    const saveMsg = document.getElementById("saveMsg");
+
+    // Switch between Current and Previous tabs
+    currentBtn.onclick = () => {
+      orderCard.classList.remove("hidden");
+      prevOrders.classList.add("hidden");
+      currentBtn.classList.add("active");
+      prevBtn.classList.remove("active");
+    };
+
+    prevBtn.onclick = async () => {
+      orderCard.classList.add("hidden");
+      prevOrders.classList.remove("hidden");
+      currentBtn.classList.remove("active");
+      prevBtn.classList.add("active");
+      await loadPreviousOrders();
+    };
+
+    // Open Google Maps route
+    const deliveryLat = 12.9716;
+    const deliveryLng = 77.5946;
+
+    document.getElementById("openMap").addEventListener("click", () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userLat = pos.coords.latitude;
+          const userLng = pos.coords.longitude;
+          const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${deliveryLat},${deliveryLng}&destination=${userLat},${userLng}&travelmode=driving`;
+          window.open(mapsUrl, "_blank");
+        },
+        () => alert("Unable to access your location. Please enable GPS.")
+      );
+    });
+
+    // Save completed order
+    document.getElementById("completeOrder").addEventListener("click", async () => {
+      const order = {
+        shop: "Pizza Palace",
+        items: "Margherita Pizza, Garlic Bread",
+        amount: 450,
+        status: "Delivered",
+        date: new Date().toISOString().split("T")[0],
+        customerName: "Suraj Hattarakal",
+        customerPhone: "8088975913",
+        address: "5th Main, MG Road, Near City Mall"
+      };
+
+      try {
+        const res = await fetch("https://your-backend-link.onrender.com/api/orders/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          saveMsg.textContent = "✅ Order saved successfully!";
+          orderCard.classList.add("hidden");
+          await loadPreviousOrders();
+          prevOrders.classList.remove("hidden");
+        } else {
+          alert("❌ Failed: " + data.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Server not reachable!");
+      }
+    });
+
+    // Load previous orders
+    async function loadPreviousOrders() {
+      try {
+        const res = await fetch("https://your-backend-link.onrender.com/api/orders/all");
+        const orders = await res.json();
+        orderHistory.innerHTML = "";
+        orders.forEach((o) => {
+          orderHistory.innerHTML += `
+            <div class="order-info">
+              <p><b>${o.shop}</b></p>
+              <p>${o.items}</p>
+              <p>₹${o.amount} | ${o.status}</p>
+              <p>${o.customerName} - ${o.customerPhone}</p>
+              <p>${o.address}</p>
+              <small>${o.date}</small>
+            </div>
+          `;
+        });
+      } catch (err) {
+        orderHistory.innerHTML = "<p>⚠️ Failed to load orders.</p>";
+      }
+    }
+  </script>
+</body>
+</html>

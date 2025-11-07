@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedo - Shop Demo</title>
+<style>
+body{margin:0;font-family:Poppins,sans-serif;background:radial-gradient(circle at top,#0a0f24,#000);color:white;}
+header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;background:rgba(0,10,40,0.9);box-shadow:0 0 20px rgba(0,128,255,0.3);position:sticky;top:0;z-index:100;}
+header h1{color:#00aaff;font-size:22px;margin:0;}
+.back-btn{color:white;font-size:22px;cursor:pointer;}
+.items{display:flex;flex-direction:column;padding:15px;gap:15px;}
+.item-card{background:white;color:#000;border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 12px rgba(0,128,255,0.3);padding:10px;}
+.item-info{flex:1;padding-right:10px;}
+.item-info h3{margin:0;color:#001133;}
+.item-info p{margin:5px 0;font-size:14px;color:#333;}
+.item-price{font-weight:bold;color:#00aaff;}
+.item-img{width:100px;height:100px;border-radius:10px;object-fit:cover;}
+.quantity{display:flex;align-items:center;margin-top:8px;}
+.quantity button{background:#00aaff;border:none;color:white;font-size:16px;padding:3px 8px;border-radius:5px;cursor:pointer;}
+.quantity span{margin:0 8px;font-weight:bold;}
+.cart-bar{position:fixed;bottom:0;left:0;width:100%;background:rgba(0,10,40,0.95);color:white;display:none;justify-content:space-between;align-items:center;padding:12px 20px;box-shadow:0 -4px 20px rgba(0,128,255,0.4);font-size:16px;z-index:200;}
+.cart-btn{background:#00aaff;border:none;color:white;padding:8px 16px;border-radius:8px;font-weight:bold;cursor:pointer;}
+</style>
+</head>
+<body>
+<header>
+<div class="back-btn" onclick="goBack()">←</div>
+<h1 id="shopName">Shop Demo</h1>
+<div class="rating">⭐ 4.7</div>
+</header>
+
+<section class="items" id="itemList"></section>
+
+<div class="cart-bar" id="cartBar">
+<div id="cartInfo">0 items | ₹0</div>
+<button class="cart-btn" onclick="goToOrder()">Checkout</button>
+</div>
+
+<script>
+const BACKEND_URL = "https://feedo-backend.onrender.com"; // deployed backend
+
+const shopName = localStorage.getItem("shopName") || "Demo Shop";
+document.getElementById("shopName").textContent = shopName;
+
+function goBack(){ window.location.href="index.html"; }
+
+const itemList = document.getElementById("itemList");
+const cartBar = document.getElementById("cartBar");
+const cartInfo = document.getElementById("cartInfo");
+let cart = JSON.parse(localStorage.getItem("cart")) || {};
+
+// Demo items (replace with backend later)
+const items = [
+  {name:"Margherita Pizza",desc:"Classic Italian Pizza",price:200,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Pepperoni Pizza",desc:"Spicy Pepperoni",price:250,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Veggie Pizza",desc:"Healthy Veggie",price:220,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"}
+];
+
+function renderItems(items){
+  itemList.innerHTML="";
+  items.forEach(item=>{
+    const qty = cart[item.name]?.qty || 0;
+    const div = document.createElement("div");
+    div.className = "item-card";
+    div.innerHTML = `
+      <div class="item-info">
+        <h3>${item.name}</h3>
+        <p>${item.desc}</p>
+        <p class="item-price">₹${item.price}</p>
+        <div class="quantity">
+          <button onclick="updateQty('${item.name}',-1,${item.price})">-</button>
+          <span>${qty}</span>
+          <button onclick="updateQty('${item.name}',1,${item.price})">+</button>
+        </div>
+      </div>
+      <img src="${item.img}" class="item-img" alt="${item.name}">
+    `;
+    itemList.appendChild(div);
+  });
+  updateCartBar();
+}
+
+function updateQty(name,change,price){
+  if(!cart[name]) cart[name]={qty:0,price};
+  cart[name].qty += change;
+  if(cart[name].qty<=0) delete cart[name];
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderItems(items);
+}
+
+function updateCartBar(){
+  const vals = Object.values(cart);
+  if(vals.length===0){ cartBar.style.display="none"; return; }
+  const totalQty = vals.reduce((a,b)=>a+b.qty,0);
+  const totalPrice = vals.reduce((a,b)=>a+b.qty*b.price,0);
+  cartBar.style.display="flex";
+  cartInfo.textContent=`${totalQty} items | ₹${totalPrice}`;
+}
+
+renderItems(items);
+
+// Checkout function
+async function goToOrder() {
+  const userId = localStorage.getItem("userId");
+  if(!userId){
+    alert("Please login first!");
+    window.location.href="auth.html";
+    return;
+  }
+
+  const cartItems = Object.entries(cart).map(([name,val])=>({
+    itemName: name,
+    quantity: val.qty,
+    price: val.price
+  }));
+
+  if(cartItems.length===0){
+    alert("Cart is empty!");
+    return;
+  }
+
+  const orderData = {
+    userId,
+    shop: shopName,
+    items: cartItems,
+    total: cartItems.reduce((acc,item)=>acc + item.quantity*item.price,0),
+    status: "pending",
+    date: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/orders`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(orderData)
+    });
+    const result = await res.json();
+    if(res.ok){
+      localStorage.removeItem("cart");
+      alert("✅ Order placed successfully!");
+      window.location.href = "myorders.html";
+    } else {
+      alert(result.message || "Failed to place order");
+    }
+  } catch(err){
+    console.error(err);
+    alert("Error placing order. Try again!");
+  }
+}
+</script>
+</body>
+</html>
