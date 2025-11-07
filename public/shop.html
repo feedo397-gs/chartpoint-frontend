@@ -38,7 +38,7 @@ header h1{color:#00aaff;font-size:22px;margin:0;}
 </div>
 
 <script>
-const BACKEND_URL = " "  https://app-59ed3zxcg-feedo397-gs-projects.vercel.app"; // deployed backend
+const BACKEND_URL = "https://app-59ed3zxcg-feedo397-gs-projects.vercel.app"; // deployed backend
 
 const shopName = localStorage.getItem("shopName") || "Demo Shop";
 document.getElementById("shopName").textContent = shopName;
@@ -50,11 +50,29 @@ const cartBar = document.getElementById("cartBar");
 const cartInfo = document.getElementById("cartInfo");
 let cart = JSON.parse(localStorage.getItem("cart")) || {};
 
-// Demo items (replace with backend later)
+// Menu items including sandwiches, burgers, paneer pizzas
 const items = [
-  {name:"Margherita Pizza",desc:"Classic Italian Pizza",price:200,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Pepperoni Pizza",desc:"Spicy Pepperoni",price:250,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Veggie Pizza",desc:"Healthy Veggie",price:220,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"}
+  // Sandwiches
+  {name:"Veg Sandwich",desc:"Fresh Veggies",price:69,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Cheese Sandwich",desc:"Cheese Loaded",price:79,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Mushroom Sandwich",desc:"Mushroom Delight",price:89,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Sweet Corn Sandwich",desc:"Sweet Corn Flavor",price:89,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Paneer Sandwich",desc:"Paneer Special",price:99,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Club Sandwich",desc:"Triple Layer",price:120,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+
+  // Burgers
+  {name:"Classic Burger",desc:"Basic Burger",price:79,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
+  {name:"Aloo Tikki Burger",desc:"Spicy Aloo Tikki",price:79,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
+  {name:"Paneer Burger",desc:"Paneer Burger",price:99,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
+  {name:"Cheese Burger",desc:"Cheese Loaded",price:99,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
+  {name:"Double Decker Burger",desc:"Double Layer",price:119,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
+
+  // Paneer Pizzas
+  {name:"Margherita Pizza",desc:"Classic Margherita",price:149,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Veggie Pizza",desc:"Veggie Delight",price:169,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"American Pizza",desc:"American Style",price:222,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"New York Special Pizza",desc:"NY Style Special",price:249,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
+  {name:"Paneer Pizza",desc:"Paneer Loaded",price:239,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"}
 ];
 
 function renderItems(items){
@@ -133,7 +151,7 @@ async function goToOrder() {
     const res = await fetch(`${BACKEND_URL}/api/orders`, {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(orderData)
+      body:JSON.stringify(orderData)
     });
     const result = await res.json();
     if(res.ok){
