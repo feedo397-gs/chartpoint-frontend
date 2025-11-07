@@ -165,6 +165,7 @@ const menuBtn = document.getElementById("menuBtn");
 const menuBox = document.getElementById("menuBox");
 menuBtn.addEventListener("click", () => {
   menuBox.style.display = menuBox.style.display === "flex" ? "none" : "flex";
+  menuBox.style.flexDirection = "column";
 });
 
 // Detect location
@@ -205,15 +206,16 @@ document.getElementById("ordersBtn").addEventListener("click", () => { window.lo
 const categories = document.querySelectorAll(".category");
 
 // Backend API base URL
-const API_BASE = "https://app-9gc88ubvq-feedo397-gs-projects.vercel.app"; // Your Vercel backend
+const API_BASE = "https://app-17vaabbla-feedo397-gs-projects.vercel.app"; // Updated
 
 // Add Mister Chef manually
 const initialShops = [
   {
     name: "Mister Chef",
     rating: 4.8,
-    imageUrl: "images/flypizza.jpg", // Make sure this exists in /public/images/
-    description: "Delicious pizzas and sandwiches!"
+    imageUrl: "https://app-17vaabbla-feedo397-gs-projects.vercel.app/flypizza.jpg",
+    description: "Delicious pizzas and sandwiches!",
+    categories: ["Pizza","Sandwich"]
   }
 ];
 

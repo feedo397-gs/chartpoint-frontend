@@ -7,7 +7,7 @@
 <style>
 body {background:radial-gradient(circle at top left,#0a0f24,#01040a);color:white;font-family:"Poppins",sans-serif;margin:0;padding:0;}
 header {text-align:center;padding:15px;background-color:rgba(0,0,40,0.6);box-shadow:0 0 15px rgba(0,123,255,0.4);font-size:20px;font-weight:600;letter-spacing:1px;}
-.cart-container {max-width:400px;margin:20px auto;background-color:rgba(20,20,30,0.8);border-radius:16px;box-shadow:0 0 20px rgba(0,150,255,0.4);padding:20px;}
+.cart-container {max-width:400px;margin:20px auto;background-color:rgba(20,20,30,0.8);border-radius:16px;box-shadow:0 0 20px rgba(0,150,255,0.4);padding:20px;width:95%;}
 .item {background-color:white;color:black;border-radius:10px;padding:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
 .item span {font-size:15px;}
 .total {text-align:right;font-weight:600;font-size:18px;margin:10px 0;}
@@ -39,49 +39,64 @@ button:hover {background-color:#0096ff;}
 </div>
 
 <script>
-const userId=localStorage.getItem("userId");
+const API_BASE = "https://app-17vaabbla-feedo397-gs-projects.vercel.app"; // live backend
+
+const userId = localStorage.getItem("userId");
 if(!userId){ alert("Please login first!"); window.location.href="auth.html"; }
 
-const cart=JSON.parse(localStorage.getItem("cart"))||[];
-const cartContainer=document.getElementById("cartItems");
-const totalAmountEl=document.getElementById("totalAmount");
+const cart = JSON.parse(localStorage.getItem("cart")) || [];
+const cartContainer = document.getElementById("cartItems");
+const totalAmountEl = document.getElementById("totalAmount");
 
-let total=0;
-if(cart.length>0){
-cart.forEach(item=>{
-total+=item.amount*item.quantity;
-const div=document.createElement("div");
-div.classList.add("item");
-div.innerHTML=`<span>${item.itemName} x${item.quantity}</span><span>₹${item.amount*item.quantity}</span>`;
-cartContainer.appendChild(div);
-});
-totalAmountEl.textContent="Total: ₹"+total;
-}else{
-cartContainer.innerHTML="<p style='text-align:center;color:#ccc;'>No items in cart</p>";
-totalAmountEl.textContent="Total: ₹0";
+let total = 0;
+if(cart.length > 0){
+  cart.forEach(item => {
+    total += item.amount * item.quantity;
+    const div = document.createElement("div");
+    div.classList.add("item");
+    div.innerHTML = `<span>${item.itemName} x${item.quantity}</span><span>₹${item.amount * item.quantity}</span>`;
+    cartContainer.appendChild(div);
+  });
+  totalAmountEl.textContent = "Total: ₹" + total;
+} else {
+  cartContainer.innerHTML = "<p style='text-align:center;color:#ccc;'>No items in cart</p>";
+  totalAmountEl.textContent = "Total: ₹0";
 }
 
-document.getElementById("confirmBtn").addEventListener("click", async ()=>{
-const name=document.getElementById("userName").value;
-const phone=document.getElementById("phone").value;
-const address=document.getElementById("address").value;
-const landmark=document.getElementById("landmark").value;
-const paymentMode=document.getElementById("paymentMode").value;
+document.getElementById("confirmBtn").addEventListener("click", async () => {
+  const name = document.getElementById("userName").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const landmark = document.getElementById("landmark").value.trim();
+  const paymentMode = document.getElementById("paymentMode").value;
 
-if(!name||!phone||!address||!landmark||!paymentMode){ alert("Please fill all fields!"); return;}
-if(cart.length===0){ alert("Cart is empty!"); return; }
+  if(!name || !phone || !address || !landmark || !paymentMode){ alert("Please fill all fields!"); return;}
+  if(cart.length === 0){ alert("Cart is empty!"); return; }
 
-const orderData={ userId,name,phone,address,landmark,paymentMode,cart,total,date:new Date().toISOString(),status:"pending" };
+  const orderData = { userId, name, phone, address, landmark, paymentMode, cart, total, date: new Date().toISOString(), status:"pending" };
 
-try{
-const res=await fetch("/api/orders",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(orderData) });
-const result=await res.json();
-if(res.ok){
-localStorage.removeItem("cart");
-if(paymentMode==="Online"){ window.location.href="payment.html"; }
-else{ alert("✅ Order Confirmed Successfully!"); window.location.href="index.html"; }
-}else{ alert(result.message||"Order failed!"); }
-}catch(err){ console.error(err); alert("Failed to place order. Try again."); }
+  try{
+    const res = await fetch(`${API_BASE}/api/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData)
+    });
+    const result = await res.json();
+    if(res.ok){
+      localStorage.removeItem("cart");
+      if(paymentMode === "Online"){
+        window.location.href = "payment.html";
+      } else {
+        alert("✅ Order Confirmed Successfully!");
+        window.location.href = "index.html";
+      }
+    } else {
+      alert(result.message || "Order failed!");
+    }
+  } catch(err){
+    console.error(err);
+    alert("Failed to place order. Try again.");
+  }
 });
 </script>
 </body>

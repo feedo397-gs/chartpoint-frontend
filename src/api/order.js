@@ -15,7 +15,6 @@ const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 
 export default async function handler(req, res) {
   await connectToDB(process.env.MONGO_URI);
-
   const { method } = req;
 
   if (method === "GET") {

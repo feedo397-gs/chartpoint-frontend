@@ -7,7 +7,7 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
     body { background:#4c4c4c; color:#222; display:flex; align-items:center; justify-content:center; min-height:100vh; flex-direction:column; }
-    .container { background:#595858; padding:30px; border-radius:15px; width:320px; box-shadow:0 0 20px rgba(0,0,0,0.2); }
+    .container { background:#595858; padding:30px; border-radius:15px; width:90%; max-width:350px; box-shadow:0 0 20px rgba(0,0,0,0.2); }
     h2 { text-align:center; color:#222; margin-bottom:20px; }
     input { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:8px; background:#f2f0f0; color:#222; }
     button { width:100%; padding:10px; border:none; background:#a6a5a5; color:#000; font-weight:600; border-radius:8px; cursor:pointer; box-shadow:0 0 10px rgba(0,0,0,0.1); }
@@ -56,7 +56,8 @@
   </div>
 
   <script>
-    const BACKEND_URL = "/api"; // Use Vercel relative path
+    // Live backend URL
+    const BACKEND_URL = "https://app-17vaabbla-feedo397-gs-projects.vercel.app";
 
     // Toggle forms
     function toggleForms() {

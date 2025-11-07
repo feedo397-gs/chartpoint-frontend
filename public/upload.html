@@ -79,6 +79,12 @@
       font-size: 14px;
     }
 
+    .error-msg {
+      color: #ff4d4d;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
     .loading {
       color: #00aaff;
       margin-top: 10px;
@@ -101,7 +107,7 @@
 
   <script>
     const CLOUD_NAME = "feedo";
-    const UPLOAD_PRESET = "feedo_uploads"; // unsigned preset (must be created in Cloudinary)
+    const UPLOAD_PRESET = "feedo_uploads"; // unsigned preset created in Cloudinary
 
     document.getElementById("uploadBtn").addEventListener("click", async () => {
       const shopName = document.getElementById("shopName").value.trim();
@@ -116,44 +122,51 @@
         return;
       }
 
-      // Show loading text
-      statusMsg.innerHTML = '<div class="loading">⏳ Uploading image...</div>';
+      statusMsg.innerHTML = '<div class="loading">⏳ Uploading image to Cloudinary...</div>';
 
-      // Upload to Cloudinary
       const formData = new FormData();
       formData.append("file", imageFile);
       formData.append("upload_preset", UPLOAD_PRESET);
 
       try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        // Upload to Cloudinary
+        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
           method: "POST",
           body: formData
         });
 
-        const data = await res.json();
-        if (!data.secure_url) throw new Error("Image upload failed");
+        const cloudData = await cloudRes.json();
+        if (!cloudData.secure_url) throw new Error("Cloudinary upload failed");
 
-        document.querySelector(".preview").innerHTML = `<img src="${data.secure_url}" alt="Uploaded Image" />`;
+        document.querySelector(".preview").innerHTML = `<img src="${cloudData.secure_url}" alt="Uploaded Image" />`;
 
-        // ✅ Once backend ready, send this to MongoDB
         const newItem = {
           shopName,
           itemName,
-          amount,
+          amount: parseFloat(amount),
           description,
-          imageUrl: data.secure_url
+          imageUrl: cloudData.secure_url
         };
 
-        console.log("Item ready to save:", newItem);
+        statusMsg.innerHTML = '<div class="loading">💾 Saving to database...</div>';
 
-        statusMsg.innerHTML = '<div class="success-msg">✅ Uploaded successfully & saved in Cloud!</div>';
+        // ✅ Save item in Vercel backend
+        const res = await fetch("/api/items/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newItem)
+        });
 
-        // Later: POST newItem to server.js endpoint
-        // await fetch("/add-item", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newItem) });
+        const data = await res.json();
+        if (res.ok) {
+          statusMsg.innerHTML = '<div class="success-msg">✅ Item uploaded & saved successfully!</div>';
+        } else {
+          throw new Error(data.message || "Save failed");
+        }
 
       } catch (err) {
         console.error(err);
-        statusMsg.innerHTML = '<div class="error-msg" style="color:red;">❌ Upload failed. Please try again.</div>';
+        statusMsg.innerHTML = `<div class="error-msg">❌ ${err.message}</div>`;
       }
     });
   </script>

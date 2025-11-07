@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Feedo - Shop Demo</title>
+<title>Feedo - Shop</title>
 <style>
 body{margin:0;font-family:Poppins,sans-serif;background:radial-gradient(circle at top,#0a0f24,#000);color:white;}
 header{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;background:rgba(0,10,40,0.9);box-shadow:0 0 20px rgba(0,128,255,0.3);position:sticky;top:0;z-index:100;}
 header h1{color:#00aaff;font-size:22px;margin:0;}
 .back-btn{color:white;font-size:22px;cursor:pointer;}
 .items{display:flex;flex-direction:column;padding:15px;gap:15px;}
-.item-card{background:white;color:#000;border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 12px rgba(0,128,255,0.3);padding:10px;}
+.item-card{background:white;color:#000;border-radius:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 12px rgba(0,128,255,0.3);padding:10px;max-width:95%;}
 .item-info{flex:1;padding-right:10px;}
 .item-info h3{margin:0;color:#001133;}
 .item-info p{margin:5px 0;font-size:14px;color:#333;}
@@ -26,7 +26,7 @@ header h1{color:#00aaff;font-size:22px;margin:0;}
 <body>
 <header>
 <div class="back-btn" onclick="goBack()">←</div>
-<h1 id="shopName">Shop Demo</h1>
+<h1 id="shopName">Shop</h1>
 <div class="rating">⭐ 4.7</div>
 </header>
 
@@ -38,7 +38,7 @@ header h1{color:#00aaff;font-size:22px;margin:0;}
 </div>
 
 <script>
-const BACKEND_URL = "https://app-59ed3zxcg-feedo397-gs-projects.vercel.app"; // deployed backend
+const BACKEND_URL = "https://app-17vaabbla-feedo397-gs-projects.vercel.app"; // correct backend
 
 const shopName = localStorage.getItem("shopName") || "Demo Shop";
 document.getElementById("shopName").textContent = shopName;
@@ -48,40 +48,25 @@ function goBack(){ window.location.href="index.html"; }
 const itemList = document.getElementById("itemList");
 const cartBar = document.getElementById("cartBar");
 const cartInfo = document.getElementById("cartInfo");
-let cart = JSON.parse(localStorage.getItem("cart")) || {};
 
-// Menu items including sandwiches, burgers, paneer pizzas
+// Normalize cart to array format for checkout
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
 const items = [
-  // Sandwiches
   {name:"Veg Sandwich",desc:"Fresh Veggies",price:69,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
   {name:"Cheese Sandwich",desc:"Cheese Loaded",price:79,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
   {name:"Mushroom Sandwich",desc:"Mushroom Delight",price:89,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Sweet Corn Sandwich",desc:"Sweet Corn Flavor",price:89,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Paneer Sandwich",desc:"Paneer Special",price:99,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Club Sandwich",desc:"Triple Layer",price:120,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-
-  // Burgers
-  {name:"Classic Burger",desc:"Basic Burger",price:79,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
-  {name:"Aloo Tikki Burger",desc:"Spicy Aloo Tikki",price:79,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
-  {name:"Paneer Burger",desc:"Paneer Burger",price:99,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
-  {name:"Cheese Burger",desc:"Cheese Loaded",price:99,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
-  {name:"Double Decker Burger",desc:"Double Layer",price:119,img:"https://images.unsplash.com/photo-1550547660-d9450f859349"},
-
-  // Paneer Pizzas
-  {name:"Margherita Pizza",desc:"Classic Margherita",price:149,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"Veggie Pizza",desc:"Veggie Delight",price:169,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"American Pizza",desc:"American Style",price:222,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
-  {name:"New York Special Pizza",desc:"NY Style Special",price:249,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"},
   {name:"Paneer Pizza",desc:"Paneer Loaded",price:239,img:"https://images.unsplash.com/photo-1601924582971-6e42d59f00b8"}
 ];
 
-function renderItems(items){
+function renderItems(){
   itemList.innerHTML="";
   items.forEach(item=>{
-    const qty = cart[item.name]?.qty || 0;
+    const cartItem = cart.find(i=>i.itemName===item.name);
+    const qty = cartItem?.quantity || 0;
     const div = document.createElement("div");
-    div.className = "item-card";
-    div.innerHTML = `
+    div.className="item-card";
+    div.innerHTML=`
       <div class="item-info">
         <h3>${item.name}</h3>
         <p>${item.desc}</p>
@@ -100,71 +85,33 @@ function renderItems(items){
 }
 
 function updateQty(name,change,price){
-  if(!cart[name]) cart[name]={qty:0,price};
-  cart[name].qty += change;
-  if(cart[name].qty<=0) delete cart[name];
-  localStorage.setItem("cart", JSON.stringify(cart));
-  renderItems(items);
+  const index = cart.findIndex(i=>i.itemName===name);
+  if(index===-1 && change>0) cart.push({itemName:name,quantity:1,amount:price});
+  else if(index!==-1){
+    cart[index].quantity += change;
+    if(cart[index].quantity<=0) cart.splice(index,1);
+  }
+  localStorage.setItem("cart",JSON.stringify(cart));
+  renderItems();
 }
 
 function updateCartBar(){
-  const vals = Object.values(cart);
-  if(vals.length===0){ cartBar.style.display="none"; return; }
-  const totalQty = vals.reduce((a,b)=>a+b.qty,0);
-  const totalPrice = vals.reduce((a,b)=>a+b.qty*b.price,0);
+  if(cart.length===0){ cartBar.style.display="none"; return; }
+  const totalQty = cart.reduce((a,b)=>a+b.quantity,0);
+  const totalPrice = cart.reduce((a,b)=>a+b.quantity*b.amount,0);
   cartBar.style.display="flex";
   cartInfo.textContent=`${totalQty} items | ₹${totalPrice}`;
 }
 
-renderItems(items);
+renderItems();
 
-// Checkout function
-async function goToOrder() {
+async function goToOrder(){
   const userId = localStorage.getItem("userId");
-  if(!userId){
-    alert("Please login first!");
-    window.location.href="auth.html";
-    return;
-  }
+  if(!userId){ alert("Please login first!"); window.location.href="auth.html"; return; }
+  if(cart.length===0){ alert("Cart is empty!"); return; }
 
-  const cartItems = Object.entries(cart).map(([name,val])=>({
-    itemName: name,
-    quantity: val.qty,
-    price: val.price
-  }));
-
-  if(cartItems.length===0){
-    alert("Cart is empty!");
-    return;
-  }
-
-  const orderData = {
-    userId,
-    shop: shopName,
-    items: cartItems,
-    total: cartItems.reduce((acc,item)=>acc + item.quantity*item.price,0),
-    status: "pending",
-    date: new Date().toISOString()
-  };
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/orders`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body:JSON.stringify(orderData)
-    });
-    const result = await res.json();
-    if(res.ok){
-      localStorage.removeItem("cart");
-      alert("✅ Order placed successfully!");
-      window.location.href = "myorders.html";
-    } else {
-      alert(result.message || "Failed to place order");
-    }
-  } catch(err){
-    console.error(err);
-    alert("Error placing order. Try again!");
-  }
+  localStorage.setItem("cart",JSON.stringify(cart));
+  window.location.href="cart.html";
 }
 </script>
 </body>

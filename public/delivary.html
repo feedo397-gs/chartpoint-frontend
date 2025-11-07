@@ -151,7 +151,7 @@
     const orderHistory = document.getElementById("orderHistory");
     const saveMsg = document.getElementById("saveMsg");
 
-    // Switch between Current and Previous tabs
+    // Switch between tabs
     currentBtn.onclick = () => {
       orderCard.classList.remove("hidden");
       prevOrders.classList.add("hidden");
@@ -197,7 +197,7 @@
       };
 
       try {
-        const res = await fetch("https://your-backend-link.onrender.com/api/orders/complete", {
+        const res = await fetch("/api/orders/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(order)
@@ -221,7 +221,7 @@
     // Load previous orders
     async function loadPreviousOrders() {
       try {
-        const res = await fetch("https://your-backend-link.onrender.com/api/orders/all");
+        const res = await fetch("/api/orders/all");
         const orders = await res.json();
         orderHistory.innerHTML = "";
         orders.forEach((o) => {
