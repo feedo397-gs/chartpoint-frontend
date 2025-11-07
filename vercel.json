@@ -7,13 +7,13 @@
     },
     {
       "src": "public/**/*",
-      "use": "@vercel/static-build"
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     },
     {
       "src": "/(.*)",
