@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 // ---- CORS setup ----
 // Allow your Vercel frontend domain
 app.use(cors({
-  origin: "https://app-59ed3zxcg-feedo397-gs-projects.vercel.app",
+  origin: " "  https://app-59ed3zxcg-feedo397-gs-projects.vercel.app",
   methods: ["GET", "POST", "PATCH", "DELETE"],
   credentials: true
 }));
