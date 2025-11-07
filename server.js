@@ -1,113 +1,117 @@
 // server.js
-require("dotenv").config();
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const cloudinary = require("cloudinary").v2;
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Import DB connection
-require("./db"); // <-- ensures MongoDB connects
-
-// Models
-const User = require("./models/user");
-const Item = require("./models/item");
-const Order = require("./models/order");
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// For __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public"))); // serve frontend files
 
-// Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected"))
+.catch(err => console.error("MongoDB connection error:", err));
+
+// --- Schemas ---
+const shopSchema = new mongoose.Schema({
+  name: String,
+  description: String,
+  image: String,
+  categories: [String],
+  rating: Number,
 });
 
-// ====== AUTH ROUTES ======
-app.post("/register", async (req, res) => {
-  try {
-    const { name, phone, password } = req.body;
-    if (!name || !phone || !password)
-      return res.json({ success: false, message: "All fields required" });
-
-    const existing = await User.findOne({ phone });
-    if (existing) return res.json({ success: false, message: "Phone already registered" });
-
-    const user = new User({ name, phone, password });
-    await user.save();
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+const orderSchema = new mongoose.Schema({
+  userId: String,
+  shop: String,
+  items: [{ itemName: String, quantity: Number, price: Number }],
+  total: Number,
+  status: { type: String, default: "pending" },
+  date: { type: Date, default: Date.now },
 });
 
-app.post("/login", async (req, res) => {
-  try {
-    const { phone, password } = req.body;
-    const user = await User.findOne({ phone, password });
-    if (!user) return res.json({ success: false, message: "Invalid credentials" });
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+const Shop = mongoose.model("Shop", shopSchema);
+const Order = mongoose.model("Order", orderSchema);
+
+// --- Routes ---
+// Test route
+app.get("/api", (req, res) => {
+  res.send({ message: "Feedo API is running" });
 });
 
-// ====== ITEM ROUTES ======
-app.post("/add-item", async (req, res) => {
-  try {
-    const { shopName, itemName, description, amount, imageUrl } = req.body;
-    const item = new Item({ shopName, itemName, description, amount, imageUrl });
-    await item.save();
-    res.json({ success: true, item });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
+// Get all shops
 app.get("/api/shops", async (req, res) => {
   try {
-    const items = await Item.find();
-    res.json(items);
+    const shops = await Shop.find();
+    res.json(shops);
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// ====== ORDER ROUTES ======
+// Get orders for a user
+app.get("/api/orders/user/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const orders = await Order.find({ userId });
+
+    const current = orders.filter(o => o.status === "pending");
+    const completed = orders.filter(o => o.status === "completed");
+
+    res.json({ current, completed });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create a new order
 app.post("/api/orders", async (req, res) => {
   try {
     const order = new Order(req.body);
-    await order.save();
-    res.json({ success: true, order });
+    const saved = await order.save();
+    res.json(saved);
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ message: err.message });
   }
 });
 
-app.get("/api/orders/user/:userId", async (req, res) => {
+// Mark order as completed
+app.patch("/api/orders/:orderId/complete", async (req, res) => {
   try {
-    const orders = await Order.find({ customerId: req.params.userId });
-    const current = orders.filter(o => o.status !== "Delivered");
-    const completed = orders.filter(o => o.status === "Delivered");
-    res.json({ current, completed });
+    const updated = await Order.findByIdAndUpdate(
+      req.params.orderId,
+      { status: "completed" },
+      { new: true }
+    );
+    res.json(updated);
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ message: err.message });
   }
 });
 
-app.patch("/api/orders/:id/complete", async (req, res) => {
-  try {
-    await Order.findByIdAndUpdate(req.params.id, { status: "Delivered" });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+// Catch-all to serve frontend pages
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ====== START SERVER ======
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
