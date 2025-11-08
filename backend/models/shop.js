@@ -1,12 +1,11 @@
-// models/Shop.js
-import mongoose from "../src/db.js";
+import mongoose from "mongoose";
 
 const shopSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: String,
   description: String,
-  image: String,
+  imageUrl: String,
   categories: [String],
-  rating: { type: Number, default: 4.5 }
+  rating: Number
 });
 
 export default mongoose.models.Shop || mongoose.model("Shop", shopSchema);
